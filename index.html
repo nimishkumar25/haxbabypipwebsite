@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pip's Midnight Dream Station</title>
+<style>
+:root{
+  --bg:#fff8f1;--ink:#2d2422;--soft:#5c4033;--line:#5c4033;--card:#fffdf9;--berry:#a34063;--on-berry:#fff8f1;
+  --sky:#ffeedd;--cloud:rgba(255,255,255,.8);--roof:#8b6350;--dot:rgba(92,64,51,.16);
+}
+body.night{
+  --bg:#15102a;--ink:#fdf3e3;--soft:#e0c9ae;--line:#d9b48f;--card:#231a3f;--berry:#f4a3c1;--on-berry:#2d1a2e;
+  --sky:#1d1540;--cloud:rgba(255,255,255,.07);--roof:#0d0818;--dot:rgba(253,224,71,.16);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI Rounded","Comic Sans MS",system-ui,sans-serif;font-size:17px;line-height:1.5;transition:background-color .7s,color .7s;overflow-x:hidden}
+h1,h2,h3{margin:0;line-height:1.1;font-weight:700}
+p{margin:0}
+img{max-width:100%;height:auto;display:block}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:4px solid var(--berry);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+.soft{color:var(--soft)}
+.card{border:2px solid var(--line);background:var(--card);border-radius:24px;padding:22px;box-shadow:5px 5px 0 var(--line)}
+.btn{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:8px;transition:transform .1s}
+.btn[aria-pressed="true"],.btn.on{background:var(--berry);color:var(--on-berry)}
+.btn.primary{background:var(--berry);color:var(--on-berry);box-shadow:3px 3px 0 var(--line)}
+.btn:active{transform:translate(2px,2px)}
+
+/* atmosphere */
+.sun,.stars{position:fixed;inset:0;pointer-events:none;z-index:0;transition:opacity .7s}
+.sun{background:radial-gradient(circle at 88% -5%,rgba(253,224,71,.38),transparent 42%)}
+.stars{opacity:0;background-image:radial-gradient(1.5px 1.5px at 12% 18%,#fde047 50%,transparent 51%),radial-gradient(1px 1px at 78% 12%,#fff 50%,transparent 51%),radial-gradient(2px 2px at 44% 8%,#fde047 50%,transparent 51%),radial-gradient(1px 1px at 90% 44%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 6% 62%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 63% 72%,#fde047 50%,transparent 51%),radial-gradient(1.5px 1.5px at 30% 88%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 84% 90%,#fde047 50%,transparent 51%),radial-gradient(circle at 85% 0%,rgba(253,224,71,.18),transparent 38%)}
+body.night .sun{opacity:0}
+body.night .stars{opacity:1}
+header,main{position:relative;z-index:1}
+
+header.top{position:sticky;top:0;z-index:40;background:var(--bg);border-bottom:2px solid var(--line);transition:background-color .7s}
+header.top .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;padding-bottom:10px}
+.brand{font-size:19px;font-weight:700}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+#tidy{display:none}
+body.chaos #tidy{display:inline-flex}
+
+/* windows (chaos toybox) */
+.win .titlebar{display:none}
+.win{--x:0px;--y:0px;--r:0deg}
+body.chaos main{display:flex;flex-wrap:wrap;gap:32px;justify-content:center;align-items:flex-start;padding:24px 12px;max-width:1400px;margin:0 auto;background-image:radial-gradient(var(--dot) 1.5px,transparent 1.5px);background-size:22px 22px}
+body.chaos .chaos-note{display:block}
+.chaos-note{display:none;width:100%;text-align:center;font-size:15px}
+body.chaos .win{position:relative;width:100%;border:3px solid var(--line);border-radius:16px;background:var(--bg);box-shadow:8px 8px 0 var(--line);overflow:hidden;transform:translate(var(--x),var(--y)) rotate(var(--r))}
+body.chaos .win.w-hero{max-width:900px}
+body.chaos .win.w-shows{max-width:1000px}
+body.chaos .win.w-story,body.chaos .win.w-guest{max-width:760px}
+body.chaos .win.w-foot{max-width:560px}
+body.chaos .win .titlebar{display:flex;align-items:center;gap:8px;background:var(--berry);color:var(--on-berry);padding:8px 12px;border-bottom:3px solid var(--line);cursor:grab;touch-action:none;user-select:none;font-weight:700;font-size:15px}
+body.chaos .win .titlebar:active{cursor:grabbing}
+body.chaos .win .winbody{max-height:72vh;overflow:auto}
+.dots{display:flex;gap:6px}.dots i{width:12px;height:12px;border-radius:50%;border:2px solid currentColor;display:block}.dots i:last-child{background:currentColor}
+
+/* hero */
+.hero{padding:48px 0 24px}
+.hero-grid{display:grid;gap:32px;align-items:center}
+@media(min-width:800px){.hero-grid{grid-template-columns:1.05fr .95fr}.hero .copy{order:1}.hero .figcol{order:2}}
+@media(max-width:799px){.hero .figcol{order:1}.hero .copy{order:2}}
+h1{font-size:clamp(2.1rem,6vw,3.7rem);letter-spacing:-.02em}
+.tag{margin-top:14px;font-size:clamp(1.2rem,3vw,1.6rem);color:var(--berry);max-width:28rem}
+.lede{margin-top:18px;max-width:34rem;color:var(--soft);font-size:1.1rem;line-height:1.65}
+.chips{list-style:none;padding:0;margin:22px 0 0;display:flex;flex-wrap:wrap;gap:8px}
+.chips li{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;font-size:15px;font-weight:700}
+#figure{--gx:0;--gy:0;position:relative;width:100%;max-width:420px;margin:0 auto;transform:rotate(calc(var(--gx)*3deg));transform-origin:50% 80%}
+.figmask{-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 52%,#000 78%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 52%,#000 78%,transparent 100%)}
+#figure img{filter:drop-shadow(0 18px 24px rgba(92,64,51,.18));transition:filter .7s}
+body.night #figure img{filter:brightness(.58) saturate(.9)}
+.eye{position:absolute;width:5.6%;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+.eye .cover{position:absolute;inset:-12%;border-radius:50%;background:radial-gradient(circle,#54352f 55%,rgba(84,53,47,0) 74%)}
+.eye .mover{position:absolute;inset:22%;transform:translate(calc(var(--gx)*70%),calc(var(--gy)*60%))}
+.eye .glint{display:block;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,#fffbe0 0,#fde047 48%,rgba(253,224,71,0) 74%);box-shadow:0 0 12px 3px rgba(253,224,71,.6);animation:pipblink 5.5s infinite}
+body.night .eye .glint{box-shadow:0 0 22px 8px rgba(253,224,71,.8)}
+#bow{position:absolute;left:35.7%;top:26.6%;width:16%;aspect-ratio:1.15;transform:translate(-50%,-50%);border-radius:50%;border:0;background:transparent;padding:0}
+#bow .ping{position:absolute;right:8%;top:8%;width:12px;height:12px;border-radius:50%;background:#fde047;animation:ping 1.6s cubic-bezier(0,0,.2,1) infinite}
+#bow.found .ping{display:none}
+#quote{max-width:420px;margin:12px auto 0;min-height:56px;text-align:center}
+#quote .q{display:inline-block;border:2px solid var(--line);background:var(--card);border-radius:18px;padding:8px 16px;font-weight:700;box-shadow:3px 3px 0 var(--line)}
+.job{margin-top:44px;display:grid;gap:24px}
+@media(min-width:600px){.job{grid-template-columns:180px 1fr}}
+.job img.portrait{width:160px;margin:0 auto;border:2px solid var(--line);border-radius:16px}
+@media(min-width:600px){.job img.portrait{width:100%}}
+.job dl{display:grid;gap:12px 24px;margin:16px 0 0}
+@media(min-width:600px){.job dl{grid-template-columns:1fr 1fr}}
+.job dt{font-size:14px;font-weight:700;color:var(--berry)}.job dd{margin:0}
+
+/* sections */
+.sec{padding:48px 0}
+.sec h2{font-size:clamp(1.8rem,4vw,2.4rem)}
+.sec .sub{margin-top:8px;max-width:34rem}
+.grid2{margin-top:32px;display:grid;gap:32px}
+@media(min-width:1000px){.grid2{grid-template-columns:1fr 1fr}.grid2 .span2{grid-column:1/-1}}
+.frame{position:relative;margin-top:16px;overflow:hidden;border:2px solid var(--line);border-radius:16px}
+.card h3{font-size:1.5rem}
+#boxImg{transform-origin:50% 70%}
+#boxImg.sway{animation:pipsway 1.6s ease-in-out infinite}
+#wind{position:absolute;left:12px;bottom:12px}
+.pad{margin-top:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.key{height:80px;border:2px solid var(--line);border-radius:16px;font-weight:700;font-size:18px;color:#2d2422;box-shadow:3px 3px 0 var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .08s,box-shadow .08s}
+.key small{font-size:12px;font-weight:400;opacity:.7}
+.key.hit{transform:translate(2px,2px);box-shadow:none;filter:brightness(1.1)}
+.key[data-n="C5"]{background:#f9a8d4}.key[data-n="D5"]{background:#fde047}.key[data-n="E5"]{background:#c4b5fd}.key[data-n="G5"]{background:#a7f3d0}
+.hint{margin-top:10px;min-height:22px;font-size:14px;color:var(--berry)}
+#lanternImg{transition:filter .3s}
+#lanternGlow{position:absolute;inset:0;pointer-events:none;transition:opacity .3s}
+.glowrow{margin-top:12px;display:flex;align-items:center;gap:12px}
+.glowrow input{width:100%;accent-color:#a34063;cursor:pointer}
+.lanterns{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lanterns .btn{border-radius:16px;flex-direction:column;gap:4px;padding:8px 4px;font-size:14px;justify-content:center}
+.lanterns .dot{width:12px;height:12px;border-radius:50%;border:1px solid var(--line);display:block}
+.routebtns{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+.map{margin-top:16px;overflow:hidden;border:2px solid var(--line);border-radius:16px}
+.map svg{display:block;width:100%;height:auto}
+.map .routepath{animation:pipdash 1.4s linear infinite}
+.stats{margin:12px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center}
+.stats div{border:2px solid var(--line);border-radius:16px;padding:8px}
+.stats dd{margin:0;font-size:1.6rem;font-weight:700}.stats dt{font-size:14px;color:var(--soft)}
+
+/* story */
+.story{list-style:none;padding:0;margin:32px 0 0;display:grid;gap:40px}
+.scene{display:grid;gap:20px;align-items:center}
+@media(min-width:760px){.scene{grid-template-columns:1fr 1fr;gap:40px}.scene:nth-child(even) .pic{order:2}}
+.scene .pic img{margin:0 auto;max-height:420px;width:auto;border:2px solid var(--line);border-radius:24px;filter:grayscale(.35) brightness(.92);transform:scale(.97);transition:filter .7s,transform .7s}
+.scene.on .pic img{filter:none;transform:scale(1)}
+.scene .num{display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;border:2px solid var(--line);border-radius:50%;font-weight:700;font-size:14px;margin-bottom:8px;transition:background-color .5s}
+.scene.on .num{background:var(--berry);color:var(--on-berry);border-color:var(--berry)}
+.scene h3{font-size:1.5rem}.scene p{margin-top:8px;font-size:1.1rem;line-height:1.65;color:var(--soft);max-width:34rem}
+
+/* guestbook */
+.gform{margin-top:24px;display:grid;gap:16px;align-items:end}
+@media(min-width:760px){.gform{grid-template-columns:1fr 2fr auto}}
+.gform label{display:flex;justify-content:space-between;font-size:14px;font-weight:700;margin-bottom:4px}
+.gform label span+span{font-weight:400;color:var(--soft)}
+.gform input,.gform textarea{width:100%;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 12px;font:inherit}
+.gform textarea{resize:none}
+#gerr{min-height:20px;font-size:14px;font-weight:700;color:var(--berry)}
+@media(min-width:760px){#gerr{grid-column:1/-1}}
+.board{margin-top:32px;border:4px solid #5c4033;border-radius:24px;padding:20px;box-shadow:6px 6px 0 #2d2422;background-color:#8a5a3c;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.07) 0,rgba(0,0,0,.07) 2px,transparent 2px,transparent 54px),repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0,rgba(255,255,255,.04) 1px,transparent 1px,transparent 9px)}
+.board ul{list-style:none;margin:0;padding:0;display:grid;gap:20px}
+@media(min-width:640px){.board ul{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.board ul{grid-template-columns:repeat(3,1fr)}}
+.note{position:relative;border-radius:6px;padding:26px 16px 16px;color:#2d2422;box-shadow:3px 4px 0 rgba(0,0,0,.3);overflow-wrap:anywhere}
+.note::before{content:"";position:absolute;left:50%;top:6px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#a34063;border:1px solid #5c4033}
+.note p{font-size:1.1rem;line-height:1.35}.note b{display:block;margin-top:12px;font-size:14px;color:#5c4033}
+
+/* footer */
+footer{padding:40px 0 100px;text-align:center}
+.odo{margin-top:8px;display:inline-flex;align-items:center;gap:4px;border:2px solid #5c4033;background:#3a2c27;border-radius:8px;padding:8px;font-family:"Courier New",monospace;font-weight:700;font-size:clamp(1.8rem,6vw,2.4rem);box-shadow:4px 4px 0 var(--line);color:#fde047}
+.digit{position:relative;display:inline-block;height:1.5em;width:.95em;overflow:hidden;border:1px solid rgba(0,0,0,.5);border-radius:3px;background:linear-gradient(#1b1310,#2d2422,#1b1310)}
+.digit .col{position:absolute;left:0;top:0;width:100%;transition:transform 1.2s ease-out}
+.digit .col span{display:flex;height:1.5em;align-items:center;justify-content:center}
+.badges{list-style:none;padding:0;margin:24px 0 0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;font-size:12px;font-weight:700}
+.badges li{border:2px solid var(--line);background:var(--card);border-radius:4px;padding:3px 8px}
+.credit{margin:20px auto 0;max-width:30rem;font-size:14px;color:var(--soft)}
+
+/* floating bits */
+#mute{position:fixed;right:16px;bottom:16px;z-index:70;width:48px;height:48px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:var(--ink);box-shadow:3px 3px 0 var(--line);display:flex;align-items:center;justify-content:center}
+#mute svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mute:active{transform:translate(2px,2px);box-shadow:none}
+#sparkle,#confetti{position:fixed;inset:0;pointer-events:none}
+#sparkle{z-index:65}#confetti{z-index:80}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@keyframes pipsway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes pipblink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+@keyframes pipdash{to{stroke-dashoffset:-24}}
+@keyframes ping{75%,100%{transform:scale(2.4);opacity:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="sun" aria-hidden="true"></div>
+<div class="stars" aria-hidden="true"></div>
+<canvas id="sparkle" aria-hidden="true"></canvas>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<button id="mute" type="button" role="switch" aria-checked="true" aria-label="Mute all sound" data-silent></button>
+
+<header class="top">
+  <div class="wrap">
+    <span class="brand">✦ Midnight Nursery</span>
+    <div class="tools">
+      <button class="btn" id="nightBtn" type="button" aria-pressed="false">☀ Daylight</button>
+      <button class="btn" id="chaosBtn" type="button" aria-pressed="false">📦 Chaos Toybox</button>
+      <button class="btn" id="tidy" type="button">↺ Tidy up</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<p class="chaos-note soft">Everything is loose. Drag a title bar to move a window.</p>
+
+<!-- HERO -->
+<section class="win w-hero" data-title="pip.exe" style="--r:-1deg">
+<div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span>pip.exe</span></div>
+<div class="winbody">
+<div class="wrap hero">
+  <div class="hero-grid">
+    <div class="copy">
+      <h1>Pip's Midnight Dream Station</h1>
+      <p class="tag">I build the dreams you fall asleep inside.</p>
+      <p class="lede">Pip is the Junior Dream Engineer at Midnight Nursery. Pip is sleepy, round, and kind, with a tiny crooked smile. Each night Pip winds the music boxes, lights the lanterns, and flies the dreams to the right rooftops.</p>
+      <ul class="chips"><li>Junior Dream Engineer</li><li>Midnight Nursery</li><li>Night shift</li></ul>
+    </div>
+    <div class="figcol">
+      <div id="figure">
+        <div class="figmask"><img src="assets/pip_avatar_cloud.png" width="896" height="1090" alt="Pip, a round-faced skull baby in a starry nightcap with a pink bow, waving from a fluffy dream cloud"></div>
+        <span class="eye" style="left:43.9%;top:40.4%" aria-hidden="true"><span class="cover"></span><span class="mover"><span class="glint"></span></span></span>
+        <span class="eye" style="left:58.5%;top:37.4%" aria-hidden="true"><span class="cover"></span><span class="mover"><span class="glint"></span></span></span>
+        <button id="bow" type="button" data-silent aria-label="Pip's nightcap bow. Press for a surprise."><span class="ping"></span></button>
+      </div>
+      <div id="quote" aria-live="polite"><p class="soft" style="font-size:14px">Psst. Pip's bow looks pressable.</p></div>
+    </div>
+  </div>
+  <div class="card job">
+    <img class="portrait" src="assets/pip_portrait.png" width="682" height="1024" alt="Studio portrait of Pip's round skull face with warm amber eyes, a crooked smile, and a starry nightcap">
+    <div>
+      <h2 style="font-size:1.6rem">Pip's job card</h2>
+      <dl>
+        <div><dt>Title</dt><dd>Junior Dream Engineer</dd></div>
+        <div><dt>Workplace</dt><dd>Midnight Nursery</dd></div>
+        <div><dt>Shift</dt><dd>Sunset to sunrise</dd></div>
+        <div><dt>Toolkit</dt><dd>Star thread, a tiny hammer, one very soft pillow</dd></div>
+      </dl>
+    </div>
+  </div>
+</div>
+</div>
+</section>
+
+<!-- WORKSHOPS -->
+<section class="win w-shows" data-title="workshops.exe" style="--r:1deg">
+<div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span>workshops.exe</span></div>
+<div class="winbody">
+<div class="wrap sec">
+  <h2>Pip's three workshops</h2>
+  <p class="sub soft">Everything here is hands-on. Press, slide, and wind things.</p>
+  <div class="grid2">
+    <article class="card">
+      <h3>The Lullaby Lab</h3>
+      <p class="soft" style="margin-top:4px">Wind the golden key for a lullaby that is never the same twice, or play the chime pad yourself.</p>
+      <div class="frame">
+        <img id="boxImg" src="assets/pip_lullaby_box.png" width="1024" height="924" alt="A pink and cream music box with a golden winding key and a tiny unicorn on top">
+        <button id="wind" class="btn primary" type="button" aria-pressed="false">Wind the key</button>
+      </div>
+      <div class="pad" role="group" aria-label="Chime pad. Keys 1 to 4 also play notes.">
+        <button class="key" data-n="C5" data-silent type="button" aria-label="Play C5">C5<small>key 1</small></button>
+        <button class="key" data-n="D5" data-silent type="button" aria-label="Play D5">D5<small>key 2</small></button>
+        <button class="key" data-n="E5" data-silent type="button" aria-label="Play E5">E5<small>key 3</small></button>
+        <button class="key" data-n="G5" data-silent type="button" aria-label="Play G5">G5<small>key 4</small></button>
+      </div>
+      <p class="hint" id="labHint" aria-live="polite"></p>
+    </article>
+
+    <article class="card">
+      <h3>Nightlight Collection</h3>
+      <p class="soft" style="margin-top:4px">Pick a lantern, then dim it or brighten it. Try it in Midnight mode.</p>
+      <div class="frame">
+        <img id="lanternImg" src="assets/pip_dream_lantern.png" width="1024" height="914" alt="A crescent-moon nightlight lantern">
+        <div id="lanternGlow" aria-hidden="true"></div>
+      </div>
+      <p class="soft" id="lanternNote" style="margin-top:12px"></p>
+      <div class="glowrow">
+        <label for="glow" style="font-size:14px;font-weight:700">Glow</label>
+        <input id="glow" type="range" min="0" max="100" value="70">
+        <button class="btn on" id="lightSwitch" type="button" role="switch" aria-checked="true">Lights out</button>
+      </div>
+      <div class="lanterns" id="lanternPick" role="group" aria-label="Choose a lantern"></div>
+    </article>
+
+    <article class="card span2">
+      <h3>Dream Delivery Routes</h3>
+      <p class="soft" style="margin-top:4px">Choose tonight's flight path and watch Pip's moon-sled glide over the rooftops.</p>
+      <div class="routebtns" id="routeBtns" role="group" aria-label="Choose a route"></div>
+      <div class="map" id="map"></div>
+      <p class="soft" id="routeBlurb" style="margin-top:12px"></p>
+      <dl class="stats" id="routeStats"></dl>
+    </article>
+  </div>
+</div>
+</div>
+</section>
+
+<!-- STORY -->
+<section class="win w-story" data-title="origin_story.txt" style="--r:-.8deg">
+<div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span>origin_story.txt</span></div>
+<div class="winbody">
+<div class="wrap sec" style="max-width:900px">
+  <h2>How Pip arrived</h2>
+  <p class="sub soft">Three scenes. Scroll slowly.</p>
+  <ol class="story" id="story">
+    <li class="scene on"><div class="pic"><img src="assets/pip_avatar_cloud.png" width="896" height="1090" alt="Pip waving from a fluffy dream cloud"></div><div><span class="num">1</span><h3>The nursery went quiet</h3><p>One night the Midnight Nursery ran out of dreams. The mobiles stopped turning, and the ceiling stars flickered like they were holding in a yawn. Then a small cloud drifted through the window with a very sleepy passenger. Pip wore a nightcap, a pink bow, and a wave. “Hi,” said Pip. “I think I’m the new night shift.”</p></div></li>
+    <li class="scene"><div class="pic"><img src="assets/pip_lullaby_box.png" width="1024" height="924" alt="A pink and cream music box with a golden winding key"></div><div><span class="num">2</span><h3>The music box remembered</h3><p>Under the crib, Pip found an old music box and wound its golden key. One chime rolled across the floor, and the room remembered how to listen. Every note became a stitch of dream, sewn into pillows and blankets. Pip learned fast: you can’t rush a lullaby, but you can keep it company.</p></div></li>
+    <li class="scene"><div class="pic"><img src="assets/pip_dream_lantern.png" width="1024" height="914" alt="A glowing crescent-moon lantern"></div><div><span class="num">3</span><h3>The first delivery</h3><p>By morning the nursery glowed. Pip hung a crescent lantern in the window so no dream would get lost on the way in. The first delivery went perfectly: one cozy dream, one sleeping baby, zero spills. Pip yawned, tucked in the stars, and clocked out until sunset.</p></div></li>
+  </ol>
+</div>
+</div>
+</section>
+
+<!-- GUESTBOOK -->
+<section class="win w-guest" data-title="guestbook.bbs" style="--r:1.2deg">
+<div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span>guestbook.bbs</span></div>
+<div class="winbody">
+<div class="wrap sec" style="max-width:900px">
+  <h2>Dream guestbook</h2>
+  <p class="sub soft">Sign your name and leave a bedtime wish. It stays pinned on this device.</p>
+  <form class="card gform" id="gform" novalidate>
+    <div><label for="gname"><span>Your name</span></label><input id="gname" maxlength="24" autocomplete="nickname"></div>
+    <div><label for="gwish"><span>Your bedtime wish</span><span id="gcount">0/140</span></label><textarea id="gwish" maxlength="140" rows="2"></textarea></div>
+    <button class="btn primary" type="submit" style="padding:10px 20px;font-size:16px;justify-content:center">Pin my wish</button>
+    <p id="gerr" role="alert"></p>
+  </form>
+  <div class="board"><ul id="notes"></ul></div>
+</div>
+</div>
+</section>
+
+<!-- FOOTER -->
+<section class="win w-foot" data-title="visitors.dat" style="--r:-1.5deg">
+<div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span>visitors.dat</span></div>
+<div class="winbody">
+<footer class="wrap">
+  <p style="font-size:14px;font-weight:700">Dreams delivered</p>
+  <div class="odo" id="odo" role="img" aria-label="Dreams delivered"></div>
+  <ul class="badges"><li>Best viewed at bedtime</li><li>Made with love &amp; HTML</li><li>Pip approved ✦</li></ul>
+  <p class="credit">Built for haX.baby “Baby’s First Website,” Track 1: Pip, The Skull Baby. Art from the haX.baby Creator Asset Pack.</p>
+</footer>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var clamp=function(n,a,b){return Math.min(b,Math.max(a,n))};
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+
+/* ---------- SOUND ENGINE (Web Audio, no files) ---------- */
+var NOTES={C5:523.25,D5:587.33,E5:659.25,G5:783.99},NAMES=["C5","D5","E5","G5"];
+var ctx=null,master=null,muted=false,LEVEL=.6;
+function getCtx(){
+  if(!ctx){var C=window.AudioContext||window.webkitAudioContext;if(!C)return null;
+    ctx=new C();master=ctx.createGain();master.gain.value=muted?0:LEVEL;master.connect(ctx.destination)}
+  if(ctx.state==="suspended")ctx.resume();return ctx}
+function setMuted(v){muted=v;if(ctx&&master)master.gain.setTargetAtTime(v?0:LEVEL,ctx.currentTime,.02)}
+var PARTIALS=[[1,1],[2,.22],[3.01,.07]];
+function playNote(freq,o){
+  if(muted)return;var c=getCtx();if(!c)return;o=o||{};
+  var dur=o.duration||1.8,vol=o.volume||.32,t=c.currentTime+(o.delay||0);
+  var env=c.createGain();env.gain.setValueAtTime(.0001,t);
+  env.gain.exponentialRampToValueAtTime(vol,t+.012);env.gain.exponentialRampToValueAtTime(.0001,t+dur);env.connect(master);
+  PARTIALS.forEach(function(p){var os=c.createOscillator();os.type="sine";os.frequency.value=freq*p[0];
+    var g=c.createGain();g.gain.value=p[1];os.connect(g);g.connect(env);os.start(t);os.stop(t+dur+.05)})}
+function playClick(){
+  if(muted)return;var c=getCtx();if(!c)return;var t=c.currentTime;
+  var os=c.createOscillator();os.type="triangle";os.frequency.setValueAtTime(340,t);os.frequency.exponentialRampToValueAtTime(110,t+.06);
+  var lp=c.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1500;
+  var g=c.createGain();g.gain.setValueAtTime(.45,t);g.gain.exponentialRampToValueAtTime(.0001,t+.09);
+  os.connect(lp);lp.connect(g);g.connect(master);os.start(t);os.stop(t+.1)}
+function playSparkle(){[NOTES.E5,NOTES.G5,NOTES.G5*2].forEach(function(f,i){playNote(f,{duration:1.1,volume:.2,delay:i*.09})})}
+var lullabyTimer=null;
+function stopLullaby(){if(lullabyTimer){clearTimeout(lullabyTimer);lullabyTimer=null}}
+function playLullaby(onNote,onEnd){
+  stopLullaby();if(muted){onEnd&&onEnd();return}
+  var total=20,moves=[-1,-1,0,1,1,2],step=0,idx=1;
+  (function tick(){
+    if(muted||step>=total){lullabyTimer=null;onEnd&&onEnd();return}
+    if(step===total-1)idx=0;else idx=clamp(idx+moves[Math.floor(Math.random()*moves.length)],0,3);
+    var n=NAMES[idx];playNote(NOTES[n],{duration:2});onNote&&onNote(n);step++;
+    lullabyTimer=setTimeout(tick,step%4===0?780:430)})()}
+/* wood click on every button/link (add data-silent to skip) */
+document.addEventListener("click",function(e){
+  var el=e.target.closest&&e.target.closest("button, a, [role='switch']");
+  if(el&&!el.closest("[data-silent]"))playClick()});
+
+/* ---------- MUTE SWITCH ---------- */
+var muteBtn=$("#mute");
+var ICON_ON='<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
+var ICON_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+function drawMute(){muteBtn.innerHTML=muted?ICON_OFF:ICON_ON;muteBtn.setAttribute("aria-checked",String(!muted));muteBtn.setAttribute("aria-label",muted?"Turn sound on":"Mute all sound")}
+muteBtn.addEventListener("click",function(){setMuted(!muted);drawMute()});drawMute();
+
+/* ---------- DAY / MIDNIGHT ---------- */
+var nightBtn=$("#nightBtn");
+function setNight(on,save){
+  document.body.classList.toggle("night",on);nightBtn.setAttribute("aria-pressed",String(on));
+  nightBtn.textContent=on?"☾ Midnight":"☀ Daylight";
+  if(save)store("pip-night",on?"1":"0");updateLantern();rebuildMap()}
+nightBtn.addEventListener("click",function(){setNight(!document.body.classList.contains("night"),true)});
+
+/* ---------- CHAOS TOYBOX ---------- */
+var chaosBtn=$("#chaosBtn"),zTop=10;
+chaosBtn.addEventListener("click",function(){
+  var on=!document.body.classList.contains("chaos");
+  document.body.classList.toggle("chaos",on);chaosBtn.setAttribute("aria-pressed",String(on));window.scrollTo(0,0)});
+$("#tidy").addEventListener("click",function(){$$(".win").forEach(function(w){w.style.setProperty("--x","0px");w.style.setProperty("--y","0px");w._x=0;w._y=0})});
+$$(".win").forEach(function(w){
+  var tb=$(".titlebar",w);w._x=0;w._y=0;var d=null;
+  tb.setAttribute("data-silent","");tb.tabIndex=0;tb.setAttribute("role","group");
+  tb.setAttribute("aria-label",w.getAttribute("data-title")+" window. Drag the title bar, or use arrow keys, to move it.");
+  function apply(){w.style.setProperty("--x",w._x+"px");w.style.setProperty("--y",w._y+"px")}
+  function front(){zTop++;w.style.zIndex=zTop}
+  tb.addEventListener("pointerdown",function(e){tb.setPointerCapture(e.pointerId);d={sx:e.clientX,sy:e.clientY,ox:w._x,oy:w._y};front()});
+  tb.addEventListener("pointermove",function(e){if(!d)return;w._x=d.ox+e.clientX-d.sx;w._y=d.oy+e.clientY-d.sy;apply()});
+  function up(e){d=null;try{tb.releasePointerCapture(e.pointerId)}catch(x){}}
+  tb.addEventListener("pointerup",up);tb.addEventListener("pointercancel",up);
+  tb.addEventListener("keydown",function(e){
+    var m={ArrowLeft:[-24,0],ArrowRight:[24,0],ArrowUp:[0,-24],ArrowDown:[0,24]}[e.key];
+    if(!m)return;e.preventDefault();w._x+=m[0];w._y+=m[1];apply();front()})});
+
+/* ---------- SPARKLE TRAIL ---------- */
+(function(){
+  if(reduced)return;var cv=$("#sparkle"),cx=cv.getContext("2d");if(!cx)return;
+  var G=["✧","✦","⋆"],C=["#e0a800","#fde047","#a34063","#f472b6","#c4b5fd"],parts=[],raf=0,lx=-1e3,ly=-1e3,w=0,h=0;
+  function resize(){var dpr=Math.min(window.devicePixelRatio||1,2);w=innerWidth;h=innerHeight;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+"px";cv.style.height=h+"px";cx.setTransform(dpr,0,0,dpr,0,0)}
+  resize();addEventListener("resize",resize);
+  function loop(){
+    cx.clearRect(0,0,w,h);
+    for(var i=parts.length-1;i>=0;i--){var p=parts[i];p.life--;if(p.life<=0){parts.splice(i,1);continue}
+      p.x+=p.vx;p.y+=p.vy;p.vy+=.012;p.rot+=p.vr;var a=p.life/p.max;
+      cx.save();cx.globalAlpha=a;cx.translate(p.x,p.y);cx.rotate(p.rot);cx.font=(p.size*(.5+a*.5))+"px serif";
+      cx.fillStyle=p.color;cx.textAlign="center";cx.textBaseline="middle";cx.fillText(p.glyph,0,0);cx.restore()}
+    raf=parts.length?requestAnimationFrame(loop):0}
+  addEventListener("pointermove",function(e){
+    var dx=e.clientX-lx,dy=e.clientY-ly;if(dx*dx+dy*dy<256)return;lx=e.clientX;ly=e.clientY;
+    var n=Math.random()<.35?2:1;
+    for(var i=0;i<n;i++){if(parts.length>=70)parts.shift();var max=34+Math.random()*26;
+      parts.push({x:e.clientX+(Math.random()-.5)*10,y:e.clientY+(Math.random()-.5)*10,vx:(Math.random()-.5)*.9,vy:-.2-Math.random()*.5,
+        life:max,max:max,size:11+Math.random()*11,rot:Math.random()*3,vr:(Math.random()-.5)*.08,
+        glyph:G[Math.floor(Math.random()*3)],color:C[Math.floor(Math.random()*C.length)]})}
+    if(!raf)raf=requestAnimationFrame(loop)},{passive:true});
+})();
+
+/* ---------- CONFETTI (own tiny version) ---------- */
+var cf=$("#confetti"),cfx=cf.getContext("2d"),bits=[],cfRaf=0;
+function cfFit(){cf.width=innerWidth;cf.height=innerHeight}cfFit();addEventListener("resize",cfFit);
+function cfLoop(){
+  cfx.clearRect(0,0,cf.width,cf.height);
+  for(var i=bits.length-1;i>=0;i--){var b=bits[i];b.life--;if(b.life<=0){bits.splice(i,1);continue}
+    b.vy+=.28;b.vx*=.985;b.x+=b.vx;b.y+=b.vy;b.rot+=b.vr;
+    cfx.save();cfx.globalAlpha=Math.min(1,b.life/30);cfx.translate(b.x,b.y);cfx.rotate(b.rot);cfx.fillStyle=b.c;cfx.fillRect(-b.w/2,-b.h/2,b.w,b.h);cfx.restore()}
+  cfRaf=bits.length?requestAnimationFrame(cfLoop):(cfx.clearRect(0,0,cf.width,cf.height),0)}
+function burst(x,y){
+  if(reduced)return;var cols=["#fde047","#f9a8d4","#a34063","#fff8f1","#c4b5fd"];
+  for(var i=0;i<130;i++){var a=Math.random()*Math.PI*2,sp=4+Math.random()*10;
+    bits.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-5,rot:Math.random()*6,vr:(Math.random()-.5)*.4,
+      w:6+Math.random()*6,h:4+Math.random()*5,c:cols[Math.floor(Math.random()*cols.length)],life:80+Math.random()*60})}
+  if(!cfRaf)cfRaf=requestAnimationFrame(cfLoop)}
+
+/* ---------- HERO: eye-tracking + bow ---------- */
+(function(){
+  var fig=$("#figure"),tx=0,ty=0,cx=0,cy=0,last=-Infinity,visible=true;
+  if(!reduced){
+    addEventListener("pointermove",onP,{passive:true});addEventListener("pointerdown",onP,{passive:true});
+    if("IntersectionObserver" in window)new IntersectionObserver(function(en){visible=en[0].isIntersecting}).observe(fig);
+    requestAnimationFrame(loop)}
+  function onP(e){var r=fig.getBoundingClientRect(),mx=r.left+r.width/2,my=r.top+r.height*.4;
+    tx=clamp((e.clientX-mx)/(Math.max(r.width,240)*.9),-1,1);ty=clamp((e.clientY-my)/(Math.max(r.height,240)*.9),-1,1);last=performance.now()}
+  function loop(t){
+    if(visible){
+      if(t-last>3000){tx=Math.sin(t/1700)*.7;ty=Math.cos(t/2300)*.35}
+      cx+=(tx-cx)*.12;cy+=(ty-cy)*.12;fig.style.setProperty("--gx",cx.toFixed(3));fig.style.setProperty("--gy",cy.toFixed(3))}
+    requestAnimationFrame(loop)}
+  var Q=["Every dream starts as a tiny yawn.","Sleep tight. The stars are on night shift.","A good dream is a warm blanket for your mind.","Even the moon naps behind the clouds.","You did enough today. Let the dreaming begin."],qi=-1;
+  $("#bow").addEventListener("click",function(e){
+    var r=e.currentTarget.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2);playSparkle();
+    e.currentTarget.classList.add("found");qi=(qi+1)%Q.length;
+    var box=$("#quote");box.innerHTML="";var p=document.createElement("p");p.className="q";p.textContent="✦ "+Q[qi];box.appendChild(p)})
+})();
+
+/* ---------- LULLABY LAB ---------- */
+(function(){
+  var hint=$("#labHint"),wind=$("#wind"),box=$("#boxImg"),playing=false,ft=null;
+  function flash(n){var k=$('.key[data-n="'+n+'"]');if(!k)return;k.classList.add("hit");clearTimeout(ft);ft=setTimeout(function(){$$(".key").forEach(function(x){x.classList.remove("hit")})},260)}
+  function press(n){hint.textContent=muted?"Sound is muted. Use the speaker button to hear the chimes.":"";playNote(NOTES[n]);flash(n)}
+  $$(".key").forEach(function(k){
+    k.addEventListener("pointerdown",function(){press(k.dataset.n)});
+    k.addEventListener("click",function(e){if(e.detail===0)press(k.dataset.n)})});
+  wind.addEventListener("click",function(){
+    if(playing){stopLullaby();playing=false;box.classList.remove("sway");wind.textContent="Wind the key";wind.setAttribute("aria-pressed","false");return}
+    if(muted){hint.textContent="Sound is muted. Use the speaker button to hear the lullaby.";return}
+    hint.textContent="";playing=true;box.classList.add("sway");wind.textContent="Stop the lullaby";wind.setAttribute("aria-pressed","true");
+    playLullaby(flash,function(){playing=false;box.classList.remove("sway");wind.textContent="Wind the key";wind.setAttribute("aria-pressed","false")})});
+  addEventListener("keydown",function(e){
+    if(e.repeat||e.metaKey||e.ctrlKey||e.altKey)return;var t=e.target;
+    if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable))return;
+    var i=["1","2","3","4"].indexOf(e.key);if(i>=0)press(NAMES[i])})
+})();
+
+/* ---------- NIGHTLIGHT COLLECTION ---------- */
+var LANTERNS=[
+  {id:"moon",name:"Moon Nap",note:"Warm amber for the sleepiest corners.",filter:"none",glow:"253,224,71"},
+  {id:"rose",name:"Rosy Hush",note:"A blush glow for bows and blankets.",filter:"hue-rotate(-25deg) saturate(1.2)",glow:"249,168,212"},
+  {id:"lilac",name:"Lilac Drift",note:"Cool lavender for dreams that float.",filter:"hue-rotate(20deg) saturate(.95)",glow:"196,181,253"}];
+var levels={moon:70,rose:45,lilac:0},selL="moon";
+function updateLantern(){
+  var L=LANTERNS.filter(function(x){return x.id===selL})[0],lvl=levels[selL]/100,night=document.body.classList.contains("night");
+  var bright=night?.42+lvl*.6:.88+lvl*.16;
+  var img=$("#lanternImg");img.style.filter=L.filter+" brightness("+bright+")";
+  img.alt=L.name+": a crescent-moon nightlight lantern, glowing at "+levels[selL]+" percent";
+  var g=$("#lanternGlow");g.style.background="radial-gradient(circle at 50% 55%,rgba("+L.glow+",.95) 0%,rgba("+L.glow+",.35) 36%,transparent 68%)";
+  g.style.opacity=lvl*(night?1:.6);g.style.mixBlendMode=night?"screen":"multiply";
+  $("#lanternNote").textContent=L.note;$("#glow").value=levels[selL];
+  var sw=$("#lightSwitch");sw.setAttribute("aria-checked",String(levels[selL]>0));sw.textContent=levels[selL]>0?"Lights out":"Light on";
+  $$("#lanternPick .btn").forEach(function(b){
+    var id=b.dataset.id,l=LANTERNS.filter(function(x){return x.id===id})[0],on=levels[id]>0,d=$(".dot",b);
+    b.setAttribute("aria-pressed",String(id===selL));d.style.background=on?"rgb("+l.glow+")":"transparent";d.style.boxShadow=on?"0 0 8px 2px rgba("+l.glow+",.9)":"none"})}
+LANTERNS.forEach(function(l){
+  var b=document.createElement("button");b.type="button";b.className="btn";b.dataset.id=l.id;b.innerHTML='<span class="dot"></span>'+l.name;
+  b.addEventListener("click",function(){selL=l.id;updateLantern()});$("#lanternPick").appendChild(b)});
+$("#glow").addEventListener("input",function(e){levels[selL]=Number(e.target.value);updateLantern()});
+$("#lightSwitch").addEventListener("click",function(){levels[selL]=levels[selL]>0?0:75;updateLantern()});
+updateLantern();
+
+/* ---------- DREAM DELIVERY ROUTES ---------- */
+var ROUTES=[
+  {id:"loop",name:"Lullaby Loop",d:"M30 205 C120 95 200 265 300 150 S480 85 570 175",stops:[[30,205,"Nursery"],[300,150,"Quilt St."],[570,175,"Hush Hill"]],houses:12,lull:3,min:8,blurb:"Short hops over the sleepiest chimneys."},
+  {id:"express",name:"Starlight Express",d:"M30 125 C150 45 250 65 330 112 S500 235 570 95",stops:[[30,125,"Pillow Pier"],[330,112,"Comet Corner"],[570,95,"Moon Gate"]],houses:20,lull:5,min:15,blurb:"The long way round, for babies who need extra stars."},
+  {id:"skyline",name:"Slumber Skyline",d:"M40 255 C140 175 220 235 300 205 S460 125 560 215",stops:[[40,255,"Tiptoe Lane"],[300,205,"Teddy Tower"],[560,215,"Dreamy Docks"]],houses:16,lull:4,min:11,blurb:"Low and quiet, skimming the rooftops."}];
+var HOUSES=[[0,58,62],[62,44,84],[110,62,56],[176,48,76],[228,66,60],[298,46,90],[348,60,58],[412,50,80],[466,64,64],[534,66,74]];
+var routeId="loop";
+function rebuildMap(){
+  var R=ROUTES.filter(function(r){return r.id===routeId})[0],night=document.body.classList.contains("night"),s="";
+  s+='<svg viewBox="0 0 600 320" role="img" aria-label="Map of the '+R.name+' route, stopping at '+R.stops.map(function(x){return x[2]}).join(", ")+'"><rect width="600" height="320" fill="var(--sky)"/>';
+  [[90,60,34],[250,40,26],[430,70,38],[540,30,22]].forEach(function(c){s+='<ellipse cx="'+c[0]+'" cy="'+c[1]+'" rx="'+c[2]*1.6+'" ry="'+c[2]*.6+'" fill="var(--cloud)"/>'});
+  HOUSES.forEach(function(h){var x=h[0],w=h[1],hh=h[2],y=320-hh;
+    s+='<g fill="var(--roof)"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'"/><polygon points="'+(x-3)+','+y+' '+(x+w/2)+','+(y-20)+' '+(x+w+3)+','+y+'"/><rect x="'+(x+w*.3)+'" y="'+(y+hh*.3)+'" width="'+w*.22+'" height="'+w*.22+'" rx="2" fill="#fde047" opacity="'+(night?.95:.55)+'"/></g>'});
+  s+='<path class="routepath" d="'+R.d+'" fill="none" stroke="var(--berry)" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 10"/>';
+  R.stops.forEach(function(p,i){
+    var anchor=i===0?"start":i===R.stops.length-1?"end":"middle";
+    s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="8" fill="#fde047" stroke="var(--roof)" stroke-width="2.5"/><text x="'+p[0]+'" y="'+(p[1]-16)+'" font-size="14" font-weight="700" text-anchor="'+anchor+'" fill="var(--ink)" stroke="var(--sky)" stroke-width="4" paint-order="stroke">'+p[2]+'</text>'});
+  if(!reduced)s+='<g><animateMotion path="'+R.d+'" dur="7s" repeatCount="indefinite"/><text font-size="26" text-anchor="middle" dy="8">🌙</text></g>';
+  s+='</svg>';$("#map").innerHTML=s;
+  $("#routeBlurb").textContent=R.blurb;
+  $("#routeStats").innerHTML='<div><dd>'+R.houses+'</dd><dt>Houses</dt></div><div><dd>'+R.lull+'</dd><dt>Lullabies</dt></div><div><dd>'+R.min+'</dd><dt>Minutes</dt></div>';
+  $$("#routeBtns .btn").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.id===routeId))})}
+ROUTES.forEach(function(r){
+  var b=document.createElement("button");b.type="button";b.className="btn";b.dataset.id=r.id;b.textContent=r.name;
+  b.addEventListener("click",function(){routeId=r.id;rebuildMap()});$("#routeBtns").appendChild(b)});
+rebuildMap();
+
+/* ---------- STORY SCROLL ---------- */
+(function(){
+  var scenes=$$("#story .scene");
+  if(!("IntersectionObserver" in window))return;
+  var io=new IntersectionObserver(function(en){
+    en.forEach(function(e){if(e.isIntersecting){scenes.forEach(function(s){s.classList.toggle("on",s===e.target)})}})},{rootMargin:"-40% 0px -40% 0px"});
+  scenes.forEach(function(s){io.observe(s)})})();
+
+/* ---------- GUESTBOOK ---------- */
+(function(){
+  var KEY="pip-guestbook-v1",TONES=["#fff3c4","#ffe0ec","#e7e0ff","#dcf7ea"];
+  var SEED=[{id:"s1",name:"Moth",wish:"May your pillow always be the cool side.",tilt:-2,tone:0},{id:"s2",name:"A very small owl",wish:"Whoo needs sleep? Everyone. Goodnight!",tilt:1.5,tone:2},{id:"s3",name:"Nana",wish:"Dream of something warm and a little silly.",tilt:-1,tone:1}];
+  var entries=SEED;
+  try{var raw=store(KEY);if(raw){var p=JSON.parse(raw);if(Array.isArray(p))entries=p.filter(function(e){return e&&typeof e.name==="string"&&typeof e.wish==="string"})}}catch(e){}
+  function render(){
+    var ul=$("#notes");ul.innerHTML="";
+    entries.forEach(function(en){
+      var li=document.createElement("li");li.className="note";li.style.background=TONES[(en.tone||0)%TONES.length];li.style.transform="rotate("+(en.tilt||0)+"deg)";
+      var p=document.createElement("p");p.textContent=en.wish;var b=document.createElement("b");b.textContent="✦ "+en.name;
+      li.appendChild(p);li.appendChild(b);ul.appendChild(li)})}
+  render();
+  $("#gwish").addEventListener("input",function(e){$("#gcount").textContent=e.target.value.length+"/140"});
+  $("#gform").addEventListener("submit",function(e){
+    e.preventDefault();var n=$("#gname").value.trim(),w=$("#gwish").value.trim();
+    if(!n||!w){$("#gerr").textContent="Add your name and a wish to pin your note.";return}
+    $("#gerr").textContent="";
+    entries=[{id:Date.now()+"-"+Math.random().toString(36).slice(2,7),name:n,wish:w,tilt:Math.round((Math.random()*5-2.5)*10)/10,tone:Math.floor(Math.random()*4)}].concat(entries).slice(0,50);
+    store(KEY,JSON.stringify(entries));render();$("#gname").value="";$("#gwish").value="";$("#gcount").textContent="0/140";playSparkle()})
+})();
+
+/* ---------- HIT COUNTER ODOMETER ---------- */
+(function(){
+  var KEY="pip-dreams-delivered",SEEN="pip-dreams-seen",BASE=1429,n=BASE;
+  try{var s=parseInt(store(KEY),10);if(isFinite(s)&&s>=BASE)n=s;
+    if(!sessionStorage.getItem(SEEN)){n++;sessionStorage.setItem(SEEN,"1")}store(KEY,String(n))}catch(e){n=BASE+1}
+  var odo=$("#odo"),cols=[];
+  for(var i=0;i<6;i++){
+    if(i===3){var c=document.createElement("span");c.textContent=",";odo.appendChild(c)}
+    var d=document.createElement("span");d.className="digit";d.setAttribute("aria-hidden","true");
+    var col=document.createElement("span");col.className="col";col.style.transitionDelay=(i*90)+"ms";
+    for(var k=0;k<10;k++){var s2=document.createElement("span");s2.textContent=k;col.appendChild(s2)}
+    d.appendChild(col);odo.appendChild(d);cols.push(col)}
+  odo.setAttribute("aria-label","Dreams delivered: "+n.toLocaleString("en-US"));
+  var str=String(n);while(str.length<6)str="0"+str;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){cols.forEach(function(col,i){col.style.transform="translateY(-"+(Number(str[i])*1.5)+"em)"})})})
+})();
+
+/* restore saved mode */
+if(store("pip-night")==="1")setNight(true,false);
+})();
+</script>
+</body>
+</html>
