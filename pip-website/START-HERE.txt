@@ -1,0 +1,8 @@
+Pip's Midnight Dream Station
+
+1. Right-click the zip file and choose "Extract All".
+2. Open the extracted folder.
+3. Double-click index.html. It opens in Chrome.
+
+Keep the "assets" folder next to index.html. No installs needed.
+Click the page once to wake the sound.
